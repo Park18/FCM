@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+// 참고 자료: https://popcorn16.tistory.com/69
 public class MyFirebaseMessageService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String s) {
