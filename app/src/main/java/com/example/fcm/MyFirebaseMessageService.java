@@ -11,52 +11,60 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 public class MyFirebaseMessageService extends FirebaseMessagingService {
-    private static final String TAG = "FirebaseMsgService";
+    @Override
+    public void onNewToken(@NonNull String s) {
+        super.onNewToken(s);
+    }
 
-    private void sendNotificatoin(RemoteMessage remoteMessage) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+    @Override
+    public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
+        if (remoteMessage != null && remoteMessage.getData().size() > 0) {
+            sendNotification(remoteMessage);
+        }
+    }
 
-        String channelId = "My Testing Channel";
-        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(remoteMessage.getNotification().getTitle())
-                .setContentText(remoteMessage.getNotification().getBody())
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setVibrate(new long[]{1, 1000})
-                .setContentIntent(pendingIntent);
+    private void sendNotification(RemoteMessage remoteMessage) {
+        String title = remoteMessage.getData().get("title");
+        String message = remoteMessage.getData().get("message");
 
+        final String CHANNEL_ID = "Channel ID";
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, "FCM Testing Channel", NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(channel);
+            final String CHANNEL_NAME = "Channel Name";
+            final String CHANNEL_DESCRIPTION = "Channel Description";
+            final int importance = NotificationManager.IMPORTANCE_HIGH;
+
+            // add in API level 26
+            NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance);
+            notificationChannel.setDescription(CHANNEL_DESCRIPTION);
+            notificationChannel.enableLights(true);
+            notificationChannel.enableVibration(true);
+            notificationChannel.setVibrationPattern(new long[]{100, 200, 100, 200});
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        notificationBuilder.setSmallIcon(R.drawable.ic_launcher_background)
+                .setAutoCancel(true)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setWhen(System.currentTimeMillis())
+                .setContentTitle(title)
+                .setContentText(message);
+
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            notificationBuilder.setContentTitle(title);
+            notificationBuilder.setVibrate(new long[]{500, 500});
         }
 
         notificationManager.notify(0, notificationBuilder.build());
-        notificationBuilder.setContentIntent(pendingIntent);
-    }
-
-    @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
-        Log.d(TAG, "From" + remoteMessage.getFrom());
-
-        if (remoteMessage != null && remoteMessage.getData().size() > 0) {
-            sendNotificatoin(remoteMessage);
-        }
-    }
-
-    @Override
-    public void onNewToken(String token) {
-        Log.d(TAG, "new Token: " + token);
     }
 }

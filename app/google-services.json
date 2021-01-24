@@ -7,7 +7,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:114628130248:android:3b599d917a90fb464f3cfd",
+        "mobilesdk_app_id": "1:114628130248:android:0d7808a91615e7824f3cfd",
         "android_client_info": {
           "package_name": "com.example.fcm"
         }
